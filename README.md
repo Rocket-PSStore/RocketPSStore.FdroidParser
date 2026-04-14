@@ -1,37 +1,87 @@
-# RocketPSStore.FdroidParser
-The official .NET implementation of the Rocket PSStore parsing engine. A high-performance, strongly-typed library for handling modern F-Droid ``index-v2.json`` repositories in C#. Built to bring Rocket-speed repository management to the .NET ecosystem.
+# 🚀 RocketPSStore.FdroidParser
 
-## Package template
-This repository now includes a minimal NuGet package template for `RocketPSStore.FdroidParser`.
+[![NuGet version](https://img.shields.io/nuget/v/RocketPSStore.FdroidParser.svg)](https://www.nuget.org/packages/RocketPSStore.FdroidParser/)
+[![Build Status](https://github.com/Rocket-PSStore/RocketPSStore.FdroidParser/actions/workflows/dotnet-pack.yml/badge.svg)](https://github.com/Rocket-PSStore/RocketPSStore.FdroidParser/actions)
+[![License: LGPL-2.1](https://img.shields.io/badge/License-LGPL_2.1-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
 
-### Build and pack locally
-1. Open a terminal in the repository root.
-2. Run:
-   ```bash
-   dotnet restore src/RocketPSStore.FdroidParser/RocketPSStore.FdroidParser.csproj
-   dotnet build src/RocketPSStore.FdroidParser/RocketPSStore.FdroidParser.csproj --configuration Release
-   dotnet pack src/RocketPSStore.FdroidParser/RocketPSStore.FdroidParser.csproj --configuration Release --output ./artifacts
-   ```
-3. The package file will be created in `./artifacts`.
+**The high-performance core of the Rocket PSStore ecosystem.**
 
-### GitHub Actions
-A workflow is included at `.github/workflows/dotnet-pack.yml` that restores, builds, and packs the project on every push or pull request to `main`.
+`RocketPSStore.FdroidParser` is a modern, strongly-typed .NET library specifically engineered to handle massive F-Droid `index-v2.json` repositories. Designed for speed and memory efficiency, it brings "Rocket-class" repository management to the C# and .NET ecosystem.
 
-### Publish to GitHub Packages or NuGet.org
-To publish automatically, extend the workflow with `dotnet nuget push` and add the appropriate repository URL and secret for `NUGET_API_KEY`.
+---
 
-### Example usage
+## ✨ Features
+
+* **⚡ Zero-Footprint Streaming:** Processes the 30MB+ F-Droid index entry-by-entry. No more `OutOfMemoryException` on mobile devices.
+* **📦 Native GZIP Support:** Automatic decompression handling using modern `HttpClient` protocols.
+* **🌍 Intelligent Localization:** Built-in logic to prioritize your preferred language (e.g., `en-US`) with smart fallbacks.
+* **🔗 Async-First:** Fully utilizes `IAsyncEnumerable` for non-blocking UI updates.
+* **🛡️ Battle-Tested:** Integrated unit tests ensure data integrity across all .NET 8+ runtimes.
+
+---
+
+## 🚀 Getting Started
+
+### Installation
+
+Install via the NuGet Package Manager:
+
+```bash
+dotnet add package RocketPSStore.FdroidParser
+````
+
+### Basic Usage
+
+Processing a repository index is as simple as a few lines of code. The parser streams data directly from the source, allowing you to stop whenever you find what you need.
+
 ```csharp
 using RocketPSStore.FdroidParser;
 
+// Initialize the Rocket Client
 using var client = new FdroidClient();
-var indexUrl = "https://f-droid.org/repo/index-v2.json";
+const string repoUrl = "[https://f-droid.org/repo/index-v2.json](https://f-droid.org/repo/index-v2.json)";
 
-await foreach (var app in client.StreamAppsAsync(indexUrl))
+// Stream apps one by one to keep memory usage low
+await foreach (var app in client.StreamAppsAsync(repoUrl))
 {
-    Console.WriteLine($"Found: {app.DisplayName}");
+    Console.WriteLine($"Found App: {app.DisplayName}");
     
-    // Stop whenever you want to save data
-    if (app.PackageName == "org.fdroid.fdroid") break;
+    // Efficiently exit the stream early
+    if (app.PackageName == "org.fdroid.fdroid") 
+    {
+        Console.WriteLine("Found the official F-Droid app!");
+        break; 
+    }
 }
 ```
+
+-----
+
+## 🛠 Development & Contribution
+
+We welcome contributions to the Rocket engine\! Whether it's fixing a bug or suggesting a new feature, your help makes the Rocket fly higher.
+
+### Local Setup
+
+1.  Clone the repository.
+2.  Build the project:
+    ```bash
+    dotnet build --configuration Release
+    ```
+3.  Run the test suite:
+    ```bash
+    dotnet test
+    ```
+
+### Roadmap
+
+  - [x] High-performance GZIP streaming.
+  - [x] Initial NuGet Release.
+  - [ ] .NET MAUI Integration Samples.
+  - [ ] Multi-repository support (v3 index format).
+
+-----
+
+## 📄 License
+
+This project is licensed under the **LGPL-2.1 License** - see the [LICENSE](LICENSE) file for details.
