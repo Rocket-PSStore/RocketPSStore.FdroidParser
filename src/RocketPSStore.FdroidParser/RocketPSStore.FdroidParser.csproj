@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>RocketPSStore.FdroidParser</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Rocket PSStore</Authors>
+    <Company>Rocket PSStore</Company>
+    <Product>RocketPSStore.FdroidParser</Product>
+    <Description>Parse F-Droid index-v2.json repositories for Rocket PSStore.</Description>
+    <PackageTags>F-Droid;Parser;RocketPSStore;NuGet</PackageTags>
+    <RepositoryUrl>https://github.com/Rocket-PSStore/RocketPSStore.FdroidParser</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>LGPL-2.1-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Rocket-PSStore/RocketPSStore.FdroidParser</PackageProjectUrl>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+</Project>
