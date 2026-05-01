@@ -290,9 +290,10 @@ public static class FdroidParser
     {
         var lookup = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var entry in raw)
+        foreach (var entry in raw.Where(e => e.Key is string))
         {
-            if (entry.Key is string key && !lookup.ContainsKey(key))
+            var key = (string)entry.Key;
+            if (!lookup.ContainsKey(key))
             {
                 lookup[key] = entry.Value;
             }
