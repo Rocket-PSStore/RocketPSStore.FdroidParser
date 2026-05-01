@@ -269,17 +269,35 @@ public static class FdroidParser
 
     private static object? GetValue(Dictionary<object, object> raw, params string[] keys)
     {
+        var lookup = BuildCaseInsensitiveLookup(raw);
+        return GetValue(lookup, keys);
+    }
+
+    private static object? GetValue(Dictionary<string, object> lookup, params string[] keys)
+    {
         foreach (var key in keys)
         {
-            foreach (var entry in raw)
+            if (lookup.TryGetValue(key, out var value))
             {
-                if (entry.Key is string entryKey && string.Equals(entryKey, key, StringComparison.OrdinalIgnoreCase))
-                {
-                    return entry.Value;
-                }
+                return value;
             }
         }
 
         return null;
+    }
+
+    private static Dictionary<string, object> BuildCaseInsensitiveLookup(Dictionary<object, object> raw)
+    {
+        var lookup = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var entry in raw)
+        {
+            if (entry.Key is string key && !lookup.ContainsKey(key))
+            {
+                lookup[key] = entry.Value;
+            }
+        }
+
+        return lookup;
     }
 }
