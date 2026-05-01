@@ -16,25 +16,35 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
       - name: Restore
         run: dotnet restore src/RocketPSStore.FdroidParser/RocketPSStore.FdroidParser.csproj
+
       - name: Build
         run: dotnet build src/RocketPSStore.FdroidParser/RocketPSStore.FdroidParser.csproj --configuration Release --no-restore
+
       - name: Test
         run: dotnet test
+
       - name: Pack
         run: dotnet pack src/RocketPSStore.FdroidParser/RocketPSStore.FdroidParser.csproj --configuration Release --output ./artifacts --no-build
+
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
           name: nuget-package
           path: artifacts/*.nupkg
+
       - name: Push to NuGet
+        if: github.event_name != 'pull_request'
         run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
       - name: Push to GitHub Packages
+        if: github.event_name != 'pull_request'
         run: |
           dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
           dotnet nuget push ./artifacts/*.nupkg --source "github" --skip-duplicate
