@@ -115,7 +115,7 @@ public static class FdroidParser
             Description = ParseLocalizedString(raw, "description") ?? string.Empty,
             License = GetStringValue(raw, "license"),
             Website = GetStringValue(raw, "website"),
-            SourceCode = GetStringValue(raw, "source", "source-code", "source_code", "sourcecode", "sourcecode"),
+            SourceCode = GetStringValue(raw, "source", "source-code", "source_code", "sourcecode"),
             IssueTracker = GetStringValue(raw, "issue-tracker", "issue_tracker", "issuetracker"),
             AuthorName = GetStringValue(raw, "authorname", "author-name", "author_name"),
             AuthorEmail = GetStringValue(raw, "authoremail", "author-email", "author_email", "email"),
