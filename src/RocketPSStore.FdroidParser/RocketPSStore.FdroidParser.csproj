@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>RocketPSStore.FdroidParser</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>Rocket PSStore</Authors>
     <Company>Rocket PSStore</Company>
     <Product>RocketPSStore.FdroidParser</Product>
@@ -15,5 +15,9 @@
     <PackageProjectUrl>https://github.com/Rocket-PSStore/RocketPSStore.FdroidParser</PackageProjectUrl>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NeutralLanguage>en</NeutralLanguage>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 </Project>
