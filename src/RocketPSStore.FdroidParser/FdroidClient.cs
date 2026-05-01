@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading.Tasks;
 using RocketPSStore.FdroidParser.Models;
 
 namespace RocketPSStore.FdroidParser;
@@ -55,6 +56,26 @@ public class FdroidClient : IDisposable
                 yield return app;
             }
         }
+    }
+
+    /// <summary>
+    /// Fetches F-Droid metadata YAML for a single application and parses it into an <see cref="FdroidApp"/>.
+    /// </summary>
+    /// <param name="metadataUrl">The direct URL to the metadata YAML file.</param>
+    /// <param name="packageName">The package name for the application.</param>
+    /// <returns>A <see cref="FdroidApp"/> populated from the metadata YAML.</returns>
+    public async Task<FdroidApp> FetchAppMetadataAsync(string metadataUrl, string packageName)
+    {
+        if (string.IsNullOrWhiteSpace(metadataUrl))
+        {
+            throw new ArgumentException("Metadata URL is required.", nameof(metadataUrl));
+        }
+
+        using var response = await _httpClient.GetAsync(metadataUrl);
+        response.EnsureSuccessStatusCode();
+
+        var yaml = await response.Content.ReadAsStringAsync();
+        return FdroidParser.ParseAppMetadataYaml(yaml, packageName);
     }
 
     /// <inheritdoc/>

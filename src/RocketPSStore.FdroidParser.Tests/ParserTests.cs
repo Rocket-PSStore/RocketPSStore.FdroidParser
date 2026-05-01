@@ -56,6 +56,82 @@ public class ParserTests
         Assert.Equal("https://f-droid.org/repo/org.fdroid.fdroid/en-US/icon.png", url);
     }
 
+    [Fact]
+    public void ParseAppMetadataYaml_ShouldPopulateAppFromYaml()
+    {
+        // Arrange
+        var yaml = @"name:
+  en: Rocket App
+  fr: Application Fusée
+summary:
+  en: Fast and lightweight.
+description:
+  en: This app rockets your productivity.
+license: GPL-3.0-or-later
+website: https://rocket.example.com
+SourceCode: https://git.example.com/rocket
+IssueTracker: https://issues.example.com/rocket
+AuthorName: F-Droid
+AuthorEmail: team@f-droid.org
+Translation: https://hosted.weblate.org/projects/f-droid/f-droid
+Changelog: https://gitlab.com/fdroid/fdroidclient/-/blob/HEAD/CHANGELOG.md
+Donate: https://f-droid.org/donate
+Liberapay: F-Droid-Data
+OpenCollective: F-Droid-Euro
+Bitcoin: bc1qd8few44yaxc3wv5ceeedhdszl238qkvu50rj4v
+RepoType: git
+Repo: https://gitlab.com/fdroid/fdroidclient.git
+MaintainerNotes: |
+  This is maintained in tight conjunction with fdroidclient releases.
+ArchivePolicy: 5
+AutoUpdateMode: None
+UpdateCheckMode: Static
+CurrentVersion: 1.23.2
+CurrentVersionCode: 1023052
+builds:
+  - versionName: '0.17'
+    versionCode: 8
+    commit: c626ce5f6d3e10ae15942f01ff028be310cc695a
+categories:
+  - Productivity
+  - Utilities
+";
+
+        // Act
+        var app = FdroidParser.ParseAppMetadataYaml(yaml, "com.rocket.app");
+
+        // Assert
+        Assert.Equal("com.rocket.app", app.PackageName);
+        Assert.Equal("Rocket App", app.Name["en"]);
+        Assert.Equal("Application Fusée", app.Name["fr"]);
+        Assert.Equal("Fast and lightweight.", app.Summary);
+        Assert.Equal("This app rockets your productivity.", app.Description);
+        Assert.Equal("GPL-3.0-or-later", app.License);
+        Assert.Equal("https://rocket.example.com", app.Website);
+        Assert.Equal("https://git.example.com/rocket", app.SourceCode);
+        Assert.Equal("https://issues.example.com/rocket", app.IssueTracker);
+        Assert.Equal("F-Droid", app.AuthorName);
+        Assert.Equal("team@f-droid.org", app.AuthorEmail);
+        Assert.Equal("https://hosted.weblate.org/projects/f-droid/f-droid", app.Translation);
+        Assert.Equal("https://gitlab.com/fdroid/fdroidclient/-/blob/HEAD/CHANGELOG.md", app.Changelog);
+        Assert.Equal("https://f-droid.org/donate", app.Donate);
+        Assert.Equal("F-Droid-Data", app.Liberapay);
+        Assert.Equal("F-Droid-Euro", app.OpenCollective);
+        Assert.Equal("bc1qd8few44yaxc3wv5ceeedhdszl238qkvu50rj4v", app.Bitcoin);
+        Assert.Equal("git", app.RepoType);
+        Assert.Equal("https://gitlab.com/fdroid/fdroidclient.git", app.Repo);
+        Assert.Equal("This is maintained in tight conjunction with fdroidclient releases.", app.MaintainerNotes.Trim());
+        Assert.Equal(5, app.ArchivePolicy);
+        Assert.Equal("None", app.AutoUpdateMode);
+        Assert.Equal("Static", app.UpdateCheckMode);
+        Assert.Equal("1.23.2", app.CurrentVersion);
+        Assert.Equal(1023052, app.CurrentVersionCode);
+        Assert.Single(app.Builds);
+        Assert.Equal("c626ce5f6d3e10ae15942f01ff028be310cc695a", app.Builds[0]["commit"]);
+        Assert.Contains("Productivity", app.Categories);
+        Assert.Contains("Utilities", app.Categories);
+    }
+
     /// <summary>
     /// Verifies that the FdroidClient can be initialized (tests the Constructor logic).
     /// </summary>
