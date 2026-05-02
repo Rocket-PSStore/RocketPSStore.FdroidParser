@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using RocketPSStore.FdroidParser.Models;
 
@@ -39,22 +41,26 @@ public class FdroidClient : IDisposable
         response.EnsureSuccessStatusCode();
 
         using var stream = await response.Content.ReadAsStreamAsync();
-        
-        // System.Text.Json.Nodes or JsonSerializer.DeserializeAsyncEnumerable can be used here
-        using var jsonDoc = await JsonDocument.ParseAsync(stream);
-        
-        if (jsonDoc.RootElement.TryGetProperty("packages", out var packages))
+
+        var options = new JsonSerializerOptions
         {
-            foreach (var package in packages.EnumerateObject())
+            PropertyNameCaseInsensitive = true
+        };
+
+        var packages = JsonSerializer.DeserializeAsyncEnumerable<KeyValuePair<string, PackageEntry>>(
+            stream,
+            options,
+            "$.packages");
+
+        await foreach (var package in packages.Where(p => !string.IsNullOrWhiteSpace(p.Key)))
+        {
+            var app = new FdroidApp
             {
-                var app = new FdroidApp
-                {
-                    PackageName = package.Name,
-                    // Map your specific fields here
-                    Summary = package.Value.TryGetProperty("summary", out var s) ? s.GetString() ?? "" : ""
-                };
-                yield return app;
-            }
+                PackageName = package.Key,
+                Summary = package.Value?.Summary ?? ""
+            };
+
+            yield return app;
         }
     }
 
@@ -76,6 +82,12 @@ public class FdroidClient : IDisposable
 
         var yaml = await response.Content.ReadAsStringAsync();
         return FdroidParser.ParseAppMetadataYaml(yaml, packageName);
+    }
+
+    private sealed class PackageEntry
+    {
+        [JsonPropertyName("summary")]
+        public string? Summary { get; set; }
     }
 
     /// <inheritdoc/>
