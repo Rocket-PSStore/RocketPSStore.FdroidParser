@@ -115,7 +115,7 @@ public static class FdroidParser
             Description = ParseLocalizedString(raw, "description") ?? string.Empty,
             License = GetStringValue(raw, "license"),
             Website = GetStringValue(raw, "website"),
-            SourceCode = GetStringValue(raw, "source", "source-code", "source_code", "sourcecode", "sourcecode"),
+            SourceCode = GetStringValue(raw, "source", "source-code", "source_code", "sourcecode"),
             IssueTracker = GetStringValue(raw, "issue-tracker", "issue_tracker", "issuetracker"),
             AuthorName = GetStringValue(raw, "authorname", "author-name", "author_name"),
             AuthorEmail = GetStringValue(raw, "authoremail", "author-email", "author_email", "email"),
@@ -269,17 +269,36 @@ public static class FdroidParser
 
     private static object? GetValue(Dictionary<object, object> raw, params string[] keys)
     {
+        var lookup = BuildCaseInsensitiveLookup(raw);
+        return GetValue(lookup, keys);
+    }
+
+    private static object? GetValue(Dictionary<string, object> lookup, params string[] keys)
+    {
         foreach (var key in keys)
         {
-            foreach (var entry in raw)
+            if (lookup.TryGetValue(key, out var value))
             {
-                if (entry.Key is string entryKey && string.Equals(entryKey, key, StringComparison.OrdinalIgnoreCase))
-                {
-                    return entry.Value;
-                }
+                return value;
             }
         }
 
         return null;
+    }
+
+    private static Dictionary<string, object> BuildCaseInsensitiveLookup(Dictionary<object, object> raw)
+    {
+        var lookup = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var entry in raw.Where(e => e.Key is string))
+        {
+            var key = (string)entry.Key;
+            if (!lookup.ContainsKey(key))
+            {
+                lookup[key] = entry.Value;
+            }
+        }
+
+        return lookup;
     }
 }
