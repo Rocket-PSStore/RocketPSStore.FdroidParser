@@ -1,6 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
-using System.IO.Compression;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -14,47 +16,46 @@ namespace RocketPSStore.FdroidParser;
 public class FdroidClient : IDisposable
 {
     private readonly HttpClient _httpClient;
+    private readonly bool _disposeHttpClient;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="FdroidClient"/> class.
+    /// Initializes a new instance of the <see cref="FdroidClient"/> class with a default HTTP client.
     /// </summary>
     public FdroidClient()
+        : this(CreateDefaultHttpClient(), disposeHttpClient: true)
     {
-        // Use a handler that supports automatic decompression
-        var handler = new HttpClientHandler
-        {
-            AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
-        };
-        _httpClient = new HttpClient(handler);
     }
 
     /// <summary>
-    /// Fetches the index stream and parses it without loading the full file into memory.
+    /// Initializes a new instance of the <see cref="FdroidClient"/> class with an externally provided HTTP client.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client to use for requests.</param>
+    /// <param name="disposeHttpClient">Whether to dispose the provided HTTP client when this instance is disposed.</param>
+    public FdroidClient(HttpClient httpClient, bool disposeHttpClient = false)
+    {
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _disposeHttpClient = disposeHttpClient;
+    }
+
+    /// <summary>
+    /// Fetches the index and yields application metadata entries from the repository.
     /// </summary>
     /// <param name="url">The F-Droid index URL.</param>
     /// <returns>An async enumerable of applications.</returns>
     public async IAsyncEnumerable<FdroidApp> StreamAppsAsync(string url)
     {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            throw new ArgumentException("Index URL is required.", nameof(url));
+        }
+
         using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
 
         using var stream = await response.Content.ReadAsStreamAsync();
-        
-        // System.Text.Json.Nodes or JsonSerializer.DeserializeAsyncEnumerable can be used here
-        using var jsonDoc = await JsonDocument.ParseAsync(stream);
-        
-        if (jsonDoc.RootElement.TryGetProperty("packages", out var packages))
+        await foreach (var app in ParsePackageEntriesAsync(stream))
         {
-            foreach (var package in packages.EnumerateObject())
-            {
-                var app = new FdroidApp
-                {
-                    PackageName = package.Name,
-                    // Map your specific fields here
-                    Summary = package.Value.TryGetProperty("summary", out var s) ? s.GetString() ?? "" : ""
-                };
-                yield return app;
-            }
+            yield return app;
         }
     }
 
@@ -71,17 +72,58 @@ public class FdroidClient : IDisposable
             throw new ArgumentException("Metadata URL is required.", nameof(metadataUrl));
         }
 
-        using var response = await _httpClient.GetAsync(metadataUrl);
+        using var response = await _httpClient.GetAsync(metadataUrl, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
 
-        var yaml = await response.Content.ReadAsStringAsync();
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        using var reader = new StreamReader(stream);
+        var yaml = await reader.ReadToEndAsync();
+
         return FdroidParser.ParseAppMetadataYaml(yaml, packageName);
+    }
+
+    private static async IAsyncEnumerable<FdroidApp> ParsePackageEntriesAsync(Stream jsonStream)
+    {
+        using var jsonDoc = await JsonDocument.ParseAsync(jsonStream);
+
+        if (!jsonDoc.RootElement.TryGetProperty("packages", out var packages))
+        {
+            yield break;
+        }
+
+        foreach (var package in packages.EnumerateObject())
+        {
+            yield return new FdroidApp
+            {
+                PackageName = package.Name,
+                Summary = GetStringProperty(package.Value, "summary") ?? string.Empty
+            };
+        }
+    }
+
+    private static string? GetStringProperty(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
+    }
+
+    private static HttpClient CreateDefaultHttpClient()
+    {
+        var handler = new HttpClientHandler
+        {
+            AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
+        };
+
+        return new HttpClient(handler, disposeHandler: true);
     }
 
     /// <inheritdoc/>
     public void Dispose()
     {
-        _httpClient.Dispose();
-        GC.SuppressFinalize(this);
+        if (_disposeHttpClient)
+        {
+            _httpClient.Dispose();
+        }
     }
 }
