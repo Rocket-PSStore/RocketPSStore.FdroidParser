@@ -39,7 +39,7 @@ using RocketPSStore.FdroidParser;
 
 // Initialize the Rocket Client
 using var client = new FdroidClient();
-const string repoUrl = "[https://f-droid.org/repo/index-v2.json](https://f-droid.org/repo/index-v2.json)";
+const string repoUrl = "https://f-droid.org/repo/index-v2.json";
 
 // Stream apps one by one to keep memory usage low
 await foreach (var app in client.StreamAppsAsync(repoUrl))
